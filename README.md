@@ -7,6 +7,9 @@
 -->
 # hao_datasets
 自己用的SLAM数据集整理，KITTI TUM EUROC ROSBAG
+
+<img src="https://img-blog.csdnimg.cn/20191021212832750.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0RhcmxpbmdxaWFuZw==,size_16,color_FFFFFF,t_70" alt="img" style="zoom:67%;" />
+
 ## 01 KITTI
 
 <img src="README.assets/image-20221129150136624.png" alt="image-20221129150136624" style="zoom:50%;" />
@@ -17,7 +20,7 @@ https://vision.in.tum.de/data/datasets/rgbd-dataset/download
 
 <img src="README.assets/image-20221129150154091.png" alt="image-20221129150154091" style="zoom:50%;" />
 
-### TUM RGBD数据集工具及使用
+### 2.1 TUM RGBD数据集工具及使用
 
 #### 1. 工具
 
@@ -59,7 +62,7 @@ https://vision.in.tum.de/data/datasets/rgbd-dataset/download
 2、使用如下脚本将tgz包解析转化为bag包，此时生成的bag包比官网提供的bag流畅，频率为30hz。
 
 `generate_bags.py`：
-
+s
 ```python
 import cv2 
 import time, sys, os
@@ -209,7 +212,80 @@ python  rgbd_benchmark_tools/scripts/associate.py /path/rgb.txt /path/depth.txt 
 python rgbd_benchmark_tools/scripts/generate_bags.py /path/assocoations.txt /path/accelerometer.txt output.bag
 ```
 
+### 2.2 制作TUM数据集
 
+#### 1 步骤
+
+1. 需要获取真值（我这里使用度量科技的动捕设备NoKov；如果有Mocap，根据mocap系统指示获取Groundtruth，mocap为optitrack，使用vrpn_client_ros包获取groundtruth。具体参考[这里](https://tuw-cpsg.github.io/tutorials/optitrack-and-ros/)。）
+2. 同时录制话题`/camera/color/image_raw`、`/camera/aligned_depth_to_color/image_raw`和`/vrpn_client_node/RigidBody1/pose`，分别为RGB数据、对齐到RGB相机后的深度图和mocap输出的真实pose。
+3. 使用以下程序一键生成TUM数据格式，**前提是已经安装好ROS，注意修改代码中bag包名字、话题名和输出路径**。
+
+```python
+#!/bin/python
+import roslib
+import rosbag
+import rospy
+import cv2
+import os
+from sensor_msgs.msg import Image
+from geometry_msgs.msg import Pose, Quaternion, Point
+from cv_bridge import CvBridge
+from cv_bridge import CvBridgeError
+
+
+ros_bag = 'sence5.bag'  #bag包路径
+save_path = 'sence5/'   #输出数据集的路径
+rgb = save_path + 'rgb/'  #rgb path
+depth = save_path + 'depth/'   #depth path
+
+bridge = CvBridge()
+
+file_handle1 = open(save_path + 'rgb.txt', 'w')
+file_handle2 = open(save_path + 'depth.txt', 'w')
+file_handle3 = open(save_path + 'groundtruth.txt', 'w')
+
+with rosbag.Bag(ros_bag, 'r') as bag:
+    for topic,msg,t in bag.read_messages():
+
+        if topic == "/camera/color/image_raw":   #rgb topic
+            cv_image = bridge.imgmsg_to_cv2(msg,"bgr8")
+            timestr = "%.6f" %  msg.header.stamp.to_sec()   #rgb time stamp
+            image_name = timestr+ ".png"
+            path = "rgb/" + image_name
+            file_handle1.write(timestr + " " + path + '\n')
+            cv2.imwrite(rgb + image_name, cv_image)
+
+        if topic == "/camera/aligned_depth_to_color/image_raw":  #depth topic
+            cv_image = bridge.imgmsg_to_cv2(msg)
+            #cv_image = bridge.imgmsg_to_cv2(msg, '32FC1')
+            #cv_image = cv_image * 255
+            timestr = "%.6f" %  msg.header.stamp.to_sec()   #depth time stamp
+            image_name = timestr+ ".png"
+            path = "depth/" + image_name
+            file_handle2.write(timestr + " " + path + '\n')
+            cv2.imwrite(depth + image_name, cv_image)
+
+        if topic == '/vrpn_client_node/RigidBody_ZLT_UAV/pose': #groundtruth topic
+            p = msg.pose.position
+            q = msg.pose.orientation
+            timestr = "%.6f" %  msg.header.stamp.to_sec()
+            file_handle3.write(timestr + " " + str(round(p.x, 4)) + " " + str(round(p.y, 4)) + " " + str(round(p.z, 4)) + " ")
+            file_handle3.write(str(round(q.x, 4)) + " " + str(round(q.y, 4)) + " " + str(round(q.z, 4)) + " " + str(round(q.w, 4)) + '\n')
+file_handle1.close()
+file_handle2.close()
+file_handle3.close()
+
+```
+
+1. 值得注意的是，获取的真值pose和SLAM输出的pose不在同一个坐标系下，如果要使用自己制作的数据集并进行精度评估，则需要使用[evo评估工具](https://github.com/MichaelGrupp/evo)。
+
+2. 使用时，由于真值pose帧率高，而d435输出RGB和depth被设定为30Hz，所以两者时间戳会不同步。在使用evo工具时，则需要指定相关参数，否则评估将会出错，如下所示：
+
+   ```shell
+   evo_ape tum Groundtruth.txt OurCameraTrajectory.txt -p -va --save_results results/Our.zip --t_max_diff=0.05 --t_offset=0.05
+   ```
+
+   这儿的`--t_max_diff=0.05 --t_offset=0.05`和`-a`分别表示允许的最大时间误差、时间偏移和对齐坐标系。
 
 
 
@@ -292,7 +368,6 @@ size_t load_image_data(const string &image_folder,
     LOG(INFO) << "loaded " << limg_name.size() << " images";
     return limg_name.size();
 }
-12345678910111213141516171819202122232425262728293031323334353637
 ```
 
 读取图像时间戳的代码
@@ -379,3 +454,104 @@ size_t load_imu_data(const string &imu_file_str,
 ## 04 lidar_SLAM
 
 ![image-20221129150109843](README.assets/image-20221129150109843.png)
+
+## 05 ROSBAG
+
+**1.rosbag  录制使用**
+
+```cpp
+rosbag record -a  录制所有话题
+rosbag record /topic_name    录制指定话题
+rosbag record -O filename.bag /topic_name  指定生成数据包的名字filename.bag
+rosbag record -b 4092 /topic_name   扩大录制内存限制
+Record a bag file with the contents of specified topics.
+```
+
+1.2 如果在 launch 文件中使用 rosbag record 命令，如下：
+
+```xml
+<node pkg="rosbag" type="record" name="bag_record" args="/topic1 /topic2"/> 
+```
+
+ **2.rosbag info** 
+
+2.1 rosbag info指令可以显示数据包中的信息:
+
+```cpp
+rosbag info filename.bag
+```
+
+2.2 输出yaml配置参数 Print information in YAML format.
+
+```undefined
+ rosbag info -y filename.bag
+```
+
+**3.rosbag 回放使用**
+
+rosbag info name.bag 查看话题名称、类型、消息数量
+
+rosbag play name.bag 回放数据包
+
+rosbag play -r 1.5 name.bag 1.5倍速回放，按一定频率回放，-r选项用来设定消息发布速率；
+
+rosbag play -l name.bag 按一定频率回放，-l选项用来设定循环播放；
+
+rosbag play name.bag --topic /topic1 只播放感兴趣的topic;
+
+-d 用来指定延迟播放的时间（sec）;
+
+​    -s参数用来指定从几秒开始；rosbag play -s 10 xx.bag
+
+​    -u 参数表示仅播放包的前几秒信息；rosbag play -u 10 xx.bag
+
+​    -r 参数用来指定播放速度
+
+​    -l 循环播放
+
+​       在上述播放命令执行期间，空格键可以暂停播放。
+
+如果想修改topic名字播放
+
+```cpp
+rosbag play file.bag /topic_name:=/reame_topic_name    
+#//topic_name是原topic，reame_topic_name是新topic
+```
+
+**4.rosbag操作**
+
+4.1 将file_name.bag文件中/odom话题的消息转换到odom_name.txt文件中
+
+```cpp
+rostopic echo -b file_name.bag -p /odom > odom_name.txt
+```
+
+4.2 rosbag文件提取话题数据，生成temp1.bag只保留/odom，/tf数据
+
+```cpp
+rosbag filter temp.bag temp1.bag "topic=='/odom' or topic=='/tf'"
+```
+
+4.3 过滤，保留某个时间段的数据
+
+```cpp
+rosbag filter my.bag out.bag "t.to_sec() >= 123564.77 and t.to_sec() <= 794545.88"
+```
+
+4.4 如果播放两个及以上bag包，那么他们会第一帧对其，后面根据第一帧时间戳的时间差播放。
+
+```cpp
+rosbag play recorded1.bag recorded2.bag
+```
+
+4.5 启动5秒进入包中。
+
+```undefined
+rosbag play -s 5 recorded1.bag
+```
+
+4.6 启动时暂停按空格键开始回放
+
+```scss
+rosbag play --pause record.bag
+```
