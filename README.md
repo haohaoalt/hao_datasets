@@ -63,6 +63,7 @@ https://vision.in.tum.de/data/datasets/rgbd-dataset/download
 
 `generate_bags.py`：
 s
+
 ```python
 import cv2 
 import time, sys, os
@@ -203,7 +204,6 @@ if __name__ == "__main__":
 
 ```bash
 python  rgbd_benchmark_tools/scripts/associate.py /path/rgb.txt /path/depth.txt > assocoations.txt
-1
 ```
 
 然后使用上述`generate_bags.py`生成bag包
@@ -213,6 +213,10 @@ python rgbd_benchmark_tools/scripts/generate_bags.py /path/assocoations.txt /pat
 ```
 
 ### 2.2 制作TUM数据集
+
+将带真值的bag数据转为tum数据格式
+
+https://blog.csdn.net/qq_27350133/article/details/128103921
 
 #### 1 步骤
 
