@@ -1,19 +1,43 @@
-<!--
- * @Author: zhanghao
- * @Date: 2022-11-29 14:47:13
- * @LastEditTime: 2022-11-29 15:00:09
- * @FilePath: /hao_datasets/README.md
- * @Description: 
--->
 # hao_datasets
 自己用的SLAM数据集整理，KITTI TUM EUROC ROSBAG
-
-<img src="https://img-blog.csdnimg.cn/20191021212832750.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0RhcmxpbmdxaWFuZw==,size_16,color_FFFFFF,t_70" alt="img" style="zoom:67%;" />
-
 ## 01 KITTI
 
 <img src="README.assets/image-20221129150136624.png" alt="image-20221129150136624" style="zoom:50%;" />
 
+### 1. odometry和raw的对应关系
+Odometry页面的数据集目的是测试包括LiDAR和相机的纯SLAM（指无GPS）的结果，和raw数据集的对应关系如下。最后两列是指raw和odometry对应的起止序号，因为有几张是多余的。2011_09_26_drive_0067数据集不存在，应该是后期官方删除的。另外，odometry的00-10是有真值的，剩下的11-21是测试集。
+
+> 00: 2011_10_03_drive_0027 000000 004540 \
+01: 2011_10_03_drive_0042 000000 001100\
+02: 2011_10_03_drive_0034 000000 004660\
+03: 2011_09_26_drive_0067 000000 000800\
+04: 2011_09_30_drive_0016 000000 000270\
+05: 2011_09_30_drive_0018 000000 002760\
+06: 2011_09_30_drive_0020 000000 001100\
+07: 2011_09_30_drive_0027 000000 001100\
+08: 2011_09_30_drive_0028 001100 005170\
+09: 2011_09_30_drive_0033 000000 001590\
+10: 2011_09_30_drive_0034 000000 001200
+
+前面说了，odometry是纯SLAM但是如果你想验证GPS融合效果怎么办，这时候就不能只用odometry页面的数据了，根据上面的对应关系去把raw数据下载下来。这里有两个选择unsynced+unrectified、synced+rectified，前者指图像、LiDAR、GPS/IMU等数据没有对齐，图像也没有矫正，真正的原始数据，这块IMU的频率是100HZ；后者各源数据都是一一对齐的，图像也矫正了，但是GPS/IMU的频率只有10HZ，基本够用。
+
+这里需要注意的是raw数据的oxtc并不是GPS真值，真值只有odometry的00-10有，要比来这比。做evo对比的时候，但是你又会发现00-10的真值时间戳不对，所以要从raw里面复制，然后用develop kit里面的代码合并一下就行了。
+
+### 2. 标定文件
+
+![标定文件](./README.assets/biaoding.png)
+
+这里只记录raw数据的标定文件。不同日期采集的数据标定略有不同，包括三个文件：calib_cam_to_cam.txt，calib_imu_to_velo.txt，calib_velo_to_cam.txt，这个很简单，看上面图的坐标示意以及标定文件名字就懂了。其中，calib_cam_to_cam.txt需要好好说一说，另外两个有手就会。
+> S_00:  未矫正的原图尺寸 \
+K_00:  矫正前相机内参，因为矫正会做裁剪，甚至宽高比都会变，因此内参也会变\
+D_00:  畸变系数 至于是不是K1 K2 K3 P1 P2的顺序俺就不清楚了，知道的可以留言告诉一声\
+R_00:  从00号相机到i号相机的旋转矩阵，因为是00相机为起始坐标系，所以为单位阵\
+T_00:  同上，平移矩阵\
+S_rect_00: 裁剪后尺寸\
+R_rect_00: 这个不大清楚，反正在转换到00的相机坐标系下之后，要被这个再左乘一下（程序里会自动扩充为4*4的矩阵）\
+P_rect_00: 矫正后的内参矩阵；P_rect_01/02/03，这个参数是00的相机坐标系的点到投影到他们图像上的投影矩阵\
+
+总之就是记住，凡事都是先转到00相机坐标系下，再左乘R_rect_00，之后：（1）用P_rect_0*参数转到对应相机的图像【2D】 （2）用[R_0* | T_0* ]转到对应相机的坐标系【3D】
 ## 02 tum
 
 https://vision.in.tum.de/data/datasets/rgbd-dataset/download
@@ -290,9 +314,6 @@ file_handle3.close()
    ```
 
    这儿的`--t_max_diff=0.05 --t_offset=0.05`和`-a`分别表示允许的最大时间误差、时间偏移和对齐坐标系。
-
-
-
 
 
 ## 03 EuRoC
