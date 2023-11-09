@@ -1,8 +1,31 @@
+<<<<<<< Updated upstream
 # hao_datasets
 自己用的SLAM数据集整理，KITTI TUM EUROC ROSBAG
+=======
+<!--
+ * @Author: zhanghao
+ * @Date: 2022-11-29 14:47:13
+ * @LastEditTime: 2023-11-09 14:17:29
+ * @FilePath: /hao_datasets/README.md
+ * @Description: 
+-->
+
+# hao_datasets
+
+自己用的SLAM数据集整理，KITTI TUM EUROC ROSBAG 数据集格式
+
+<img src="https://img-blog.csdnimg.cn/20191021212832750.png?x-oss-process=image/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L0RhcmxpbmdxaWFuZw==,size_16,color_FFFFFF,t_70" alt="img" style="zoom:67%;" />
+
+>>>>>>> Stashed changes
 ## 01 KITTI
 
-<img src="README.assets/image-20221129150136624.png" alt="image-20221129150136624" style="zoom:50%;" />
+　KITTI数据集由德国卡尔斯鲁厄理工学院和丰田美国技术研究院联合创办，是目前国际上最大的自动驾驶场景下的***[计算机视觉](http://www.javashuo.com/link?url=http://lib.csdn.net/base/computervison)******[算法](http://www.javashuo.com/link?url=http://lib.csdn.net/base/datastructure)***评测数据集。该数据集用于评测立体图像(stereo)，光流(optical flow)，视觉测距(visual odometry)，3D物体检测(object detection)和3D跟踪(tracking)等计算机视觉技术在车载环境下的性能。KITTI包含市区、乡村和高速公路等场景采集的真实图像数据，每张图像中最多达15辆车和30个行人，还有各种程度的遮挡与截断。整个数据集由389对立体图像和光流图，39.2 km视觉测距序列以及超过200k 3D标注物体的图像组成[1] ，以10Hz的频率采样及同步。总体上看，原始数据集被分类为 **’Road’, ’City’, ’Residential’, ’Campus’ 和 ’Person’。** 对于3D物体检测，label细分为car, van, truck, pedestrian, pedestrian(sitting), cyclist, tram以及misc组成。
+
+KITTI数据集的数据采集平台装配有2个灰度摄像机，2个彩色摄像机，一个Velodyne 64线3D激光雷达，4个光学镜头，以及1个GPS导航系统
+
+地址:  http://www.cvlibs.net/datasets/kitti
+
+<img src="image/README/image-20221129150136624.png" alt="image-20221129150136624" style="zoom:50%;" />
 
 ### 1. odometry和raw的对应关系
 Odometry页面的数据集目的是测试包括LiDAR和相机的纯SLAM（指无GPS）的结果，和raw数据集的对应关系如下。最后两列是指raw和odometry对应的起止序号，因为有几张是多余的。2011_09_26_drive_0067数据集不存在，应该是后期官方删除的。另外，odometry的00-10是有真值的，剩下的11-21是测试集。
@@ -40,9 +63,30 @@ P_rect_00: 矫正后的内参矩阵；P_rect_01/02/03，这个参数是00的相�
 总之就是记住，凡事都是先转到00相机坐标系下，再左乘R_rect_00，之后：（1）用P_rect_0*参数转到对应相机的图像【2D】 （2）用[R_0* | T_0* ]转到对应相机的坐标系【3D】
 ## 02 tum
 
+TUM RGB-D数据集由在不同的室内场景使用Microsoft Kinect传感器记录的39 个序列组成，包含了
+
+- Testing and Debugging（测试）
+- Handheld SLAM（手持SLAM），
+- Robot SLAM（机器人SLAM）
+- Structure vs. Texture（结构 vs 低纹理）
+- Dynamic Objects（动态物体）
+- 3D Object Reconstruction（三维物体重建）
+- Validation Files（验证集）
+- Calibration Files（标定文件）几种针对不同任务的数据集，每个种类有包含多个数据，可以用于多种任务的性能测试。其中之后验证集没有真值，只能通过TUM提供的在线测试工具评测我们的计算结果。TUM数据集带有标准的轨迹和一些比较工具，所以非常适合用来做研究。
+  数据集既可以下载tgz压缩包格式，也可以下载ros bag格式。其中.bag的数据集文件可用ros的rosbag命令进行播放，相应节点订阅图像话题即可;最常用的是tgz的文件，其解压后包含：
+- 1.rgb.txt 和 depth.txt 文件记录了各文件的采集时间和对应的文件名。
+- 2.rgb/ 和 depth/目录存放着采集到的 png 格式图像文件，以采集时间命名。
+- 3.groundtruth.txt 为外部运动捕捉系统采集到的相机位姿,格式为(time, tx, ty, tz, qx, q y, qz, qw)。
+
+/media/slam007/datasets/Dataset/TUM
+
+https://vision.in.tum.de/data/datasets/rgbd-dataset/tools#evaluation
+
 https://vision.in.tum.de/data/datasets/rgbd-dataset/download
 
-<img src="README.assets/image-20221129150154091.png" alt="image-20221129150154091" style="zoom:50%;" />
+![1699510107915](image/README/1699510107915.png)
+
+![1699510318081](image/README/1699510318081.png)
 
 ### 2.1 TUM RGBD数据集工具及使用
 
@@ -63,7 +107,7 @@ https://vision.in.tum.de/data/datasets/rgbd-dataset/download
 #### 2. 数据集
 
 下载地址：https://vision.in.tum.de/data/datasets/rgbd-dataset/download
-数据集包含`bag`及`tgz`两种格式
+数据集包含 `bag`及 `tgz`两种格式
 1）bag包：图像以15hz的频率发布，imu以500hz频率发布，较多卡顿现象，发布信息：
 
 > /camera/depth/camera_info
@@ -88,149 +132,14 @@ https://vision.in.tum.de/data/datasets/rgbd-dataset/download
 `generate_bags.py`：
 s
 
-```python
-import cv2 
-import time, sys, os
-from ros import rosbag
-import roslib
-import rospy
-roslib.load_manifest('sensor_msgs')
-from sensor_msgs.msg import Image,Imu
-from geometry_msgs.msg import Vector3
-from cv_bridge import CvBridge
-from numpy import asarray
-
-# import ImageFile
-from PIL import ImageFile
-from PIL import Image as ImagePIL
-
-def CompSortFileNamesNr(f):
-    g = os.path.splitext(os.path.split(f)[1])[0] #get the file of the
-    numbertext = ''.join(c for c in g if c.isdigit())
-    return int(numbertext)
-
-def ReadIMU(IMUFile):
-    '''return IMU data and timestamp of IMU'''
-    IMUfp = open(IMUFile,'r')
-    IMULines = IMUfp.readlines()
-    #all = IMUDatas.readlines()
-    IMUDatas = {}
-    for l in IMULines:
-        if l[0] == "#":
-            continue;
-        items = l.rstrip('\n').split(' ')
-        IMUDatas[items[0]] = items[1:]
-    
-    IMUfp.close()
-    return IMUDatas 
-
-def ReadImages(assocoations):
-   assofp = open(assocoations, 'r')
-   asso = assofp.readlines()
-   RGBImages = {}
-   depthImages = {}
-   for l in asso:
-       if l[0] == "#":
-           continue;
-       items = l.rstrip('\n').split(' ')
-       RGBImages[items[0]] = items[1]
-       depthImages[items[2]] = items[3]
-
-   assofp.close()
-   return RGBImages, depthImages
-
-def CreateBag(args):#assocoations, imu, output_bag_name
-    '''read assocoations.txt'''
-    RGBImages,depthImages = ReadImages(args[1])
-
-    IMUDatas = ReadIMU(args[2]) #the url of IMU data
-
-    '''Creates a bag file with camera images'''
-    if not os.path.exists(args[3]):
-       os.system(r'touch %s' % args[3])
-    else:
-       os.system(r'rm %s' % args[3])
-       os.system(r'touch %s' % args[3])
-
-    bagName = rosbag.Bag(args[3], 'w')
-
-    try:
-        for it, iData in IMUDatas.items():
-            imu = Imu()
-            imuStamp = rospy.rostime.Time.from_sec(float(it))
-            #angular_v = Vector3()
-            linear_a = Vector3()
-            #angular_v.x = float(iData[0])
-            #angular_v.y = float(iData[1])
-            #angular_v.z = float(iData[2])
-            linear_a.x = float(iData[0])
-            linear_a.y = float(iData[1])
-            linear_a.z = float(iData[2])
-            imu.header.stamp = imuStamp
-            #imu.angular_velocity = angular_v
-            imu.linear_acceleration = linear_a
-
-            bagName.write("/imu",imu,imuStamp)
-
-        br = CvBridge()
-
-        for imt, img in RGBImages.items():
-            #img = args[2] + img; 
-            print("Adding %s" % img)
-
-            cv_image = cv2.imread(img)
-
-            Stamp = rospy.rostime.Time.from_sec(float(imt))
-
-            '''set image information '''
-            Img = br.cv2_to_imgmsg(cv_image)
-            Img.header.stamp = Stamp
-            Img.header.frame_id = "camera"
-
-            '''for mono8'''
-            Img.encoding = "rgb8"
-            bagName.write('/camera/rgb/image_color', Img, Stamp)
-
-        for dt, dimg in depthImages.items():
-            #dimg = args[2] + dimg; 
-            print("Adding %s" % dimg)
-
-            cv_image = cv2.imread(dimg, cv2.IMREAD_ANYDEPTH)
-
-            '''set image information '''
-            Stamp = rospy.rostime.Time.from_sec(float(dt))
-
-            '''set image information '''
-            dImg = br.cv2_to_imgmsg(cv_image)
-            dImg.header.stamp = Stamp
-            dImg.header.frame_id = "camera"
-
-            #dImg.encoding = "32FC1"
-
-            bagName.write('/camera/depth/image', dImg, Stamp)
-
-    finally:
-        bagName.close()
-
-if __name__ == "__main__":
-    print(sys.argv)
-
-    if len(sys.argv) < 4:
-        print("Usage:\n\t python generate_bags.py /path/assocoations.txt /path/accelerometer.txt output.bag")
-        exit(1)
-
-    CreateBag(sys.argv)
-
-```
-
 **使用方法**：
-首先：使用官网提供的脚本`associate.py`生成`assocoations.txt`文件
+首先：使用官网提供的脚本 `associate.py`生成 `assocoations.txt`文件
 
 ```bash
 python  rgbd_benchmark_tools/scripts/associate.py /path/rgb.txt /path/depth.txt > assocoations.txt
 ```
 
-然后使用上述`generate_bags.py`生成bag包
+然后使用上述 `generate_bags.py`生成bag包
 
 ```bash
 python rgbd_benchmark_tools/scripts/generate_bags.py /path/assocoations.txt /path/accelerometer.txt output.bag
@@ -245,7 +154,7 @@ https://blog.csdn.net/qq_27350133/article/details/128103921
 #### 1 步骤
 
 1. 需要获取真值（我这里使用度量科技的动捕设备NoKov；如果有Mocap，根据mocap系统指示获取Groundtruth，mocap为optitrack，使用vrpn_client_ros包获取groundtruth。具体参考[这里](https://tuw-cpsg.github.io/tutorials/optitrack-and-ros/)。）
-2. 同时录制话题`/camera/color/image_raw`、`/camera/aligned_depth_to_color/image_raw`和`/vrpn_client_node/RigidBody1/pose`，分别为RGB数据、对齐到RGB相机后的深度图和mocap输出的真实pose。
+2. 同时录制话题 `/camera/color/image_raw`、`/camera/aligned_depth_to_color/image_raw`和 `/vrpn_client_node/RigidBody1/pose`，分别为RGB数据、对齐到RGB相机后的深度图和mocap输出的真实pose。
 3. 使用以下程序一键生成TUM数据格式，**前提是已经安装好ROS，注意修改代码中bag包名字、话题名和输出路径**。
 
 ```python
@@ -306,29 +215,27 @@ file_handle3.close()
 ```
 
 1. 值得注意的是，获取的真值pose和SLAM输出的pose不在同一个坐标系下，如果要使用自己制作的数据集并进行精度评估，则需要使用[evo评估工具](https://github.com/MichaelGrupp/evo)。
-
 2. 使用时，由于真值pose帧率高，而d435输出RGB和depth被设定为30Hz，所以两者时间戳会不同步。在使用evo工具时，则需要指定相关参数，否则评估将会出错，如下所示：
 
    ```shell
    evo_ape tum Groundtruth.txt OurCameraTrajectory.txt -p -va --save_results results/Our.zip --t_max_diff=0.05 --t_offset=0.05
    ```
 
-   这儿的`--t_max_diff=0.05 --t_offset=0.05`和`-a`分别表示允许的最大时间误差、时间偏移和对齐坐标系。
-
+   这儿的 `--t_max_diff=0.05 --t_offset=0.05`和 `-a`分别表示允许的最大时间误差、时间偏移和对齐坐标系。
 
 ## 03 EuRoC
 
-<img src="README.assets/image-20221129152408668.png" alt="image-20221129152408668" style="zoom: 50%;" />
+<img src="image/README/image-20221129152408668.png" alt="image-20221129152408668" style="zoom: 50%;" />
 
 Euroc提供ROS和zip两种数据格式
 
 下载地址：https://projects.asl.ethz.ch/datasets/doku.php?id=kmavvisualinertialdatasets#downloads
 
-<img src="README.assets/image-20221129151045027.png" alt="image-20221129151045027" style="zoom:67%;" />
+<img src="image/README/image-20221129151045027.png" alt="image-20221129151045027" style="zoom:67%;" />
 
 ROSBAG格式：
 
-<img src="README.assets/image-20221129151452891.png" alt="image-20221129151452891" style="zoom:50%;" />
+<img src="image/README/image-20221129151452891.png" alt="image-20221129151452891" style="zoom:50%;" />
 
 ZIP格式：
 
@@ -478,7 +385,7 @@ size_t load_imu_data(const string &imu_file_str,
 
 ## 04 lidar_SLAM
 
-![image-20221129150109843](README.assets/image-20221129150109843.png)
+![image-20221129150109843](image/README/image-20221129150109843.png)
 
 ## 05 ROSBAG
 
@@ -498,7 +405,7 @@ Record a bag file with the contents of specified topics.
 <node pkg="rosbag" type="record" name="bag_record" args="/topic1 /topic2"/> 
 ```
 
- **2.rosbag info** 
+ **2.rosbag info**
 
 2.1 rosbag info指令可以显示数据包中的信息:
 
@@ -526,20 +433,20 @@ rosbag play name.bag --topic /topic1 只播放感兴趣的topic;
 
 -d 用来指定延迟播放的时间（sec）;
 
-​    -s参数用来指定从几秒开始；rosbag play -s 10 xx.bag
+    -s参数用来指定从几秒开始；rosbag play -s 10 xx.bag
 
-​    -u 参数表示仅播放包的前几秒信息；rosbag play -u 10 xx.bag
+    -u 参数表示仅播放包的前几秒信息；rosbag play -u 10 xx.bag
 
-​    -r 参数用来指定播放速度
+    -r 参数用来指定播放速度
 
-​    -l 循环播放
+    -l 循环播放
 
-​       在上述播放命令执行期间，空格键可以暂停播放。
+    在上述播放命令执行期间，空格键可以暂停播放。
 
 如果想修改topic名字播放
 
 ```cpp
-rosbag play file.bag /topic_name:=/reame_topic_name    
+rosbag play file.bag /topic_name:=/reame_topic_name  
 #//topic_name是原topic，reame_topic_name是新topic
 ```
 
@@ -580,3 +487,34 @@ rosbag play -s 5 recorded1.bag
 ```scss
 rosbag play --pause record.bag
 ```
+
+由于ORB_**SLAM**2默认规定使用深度相机进行建图时，相机或数据集端发布的彩色信息和深度信息必须为 **/camera/rgb/image_raw**和 **/camera/depth_registered/image_raw** ，与**ROS****bag**数据集上发布的地址不同，故而需要进行相关文件的修改。
+
+```CPP
+//修改前：
+ros::NodeHandle nh;
+ 
+message_filters::Subscriber<sensor_msgs::Image> rgb_sub(nh, "/camera/rgb/image_raw", 1);
+message_filters::Subscriber<sensor_msgs::Image> depth_sub(nh, "/camera/depth_registered/image_raw", 1);
+ 
+ 
+//修改后：
+ros::NodeHandle nh("~");
+// 添加param参数
+std::string rgb_topic = nh.param<std::string>("rgb", "/camera/rgb/image_raw");
+std::string depth_topic = nh.param<std::string>("depth", "/camera/depth_registered/image_raw");
+//输出param参数内容
+cout << "rgb: " << rgb_topic << endl;
+cout << "depth: " << depth_topic << endl;
+//订阅话题
+message_filters::Subscriber<sensor_msgs::Image> rgb_sub(nh, rgb_topic, 1);
+message_filters::Subscriber<sensor_msgs::Image> depth_sub(nh, depth_topic, 1);
+```
+
+使用参数
+
+```bash
+rosrun ORB_SLAM2 RGBD Vocabulary/ORBvoc.txt Examples/ROS/ORB_SLAM2/Astra.yaml _rgb:=/camera/rgb/image_raw _depth:=/camera/depth_registered/image_raw
+```
+
+关于如何选择内参文件，需要根据你下载的**ROS****bag**数据集进行判断，如我下载的文件名为**rgbd_dataset_freiburg1_xyz.bag**，文件名字所含数字为 ***1*** ，故而使用的内参文件对应于**TUM1**。内参文件主要需要修改参数**DepthMapFactor**。
