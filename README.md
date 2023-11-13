@@ -51,6 +51,10 @@ Odometry页面的数据集目的是测试包括LiDAR和相机的纯SLAM（指无
 
 总之就是记住，凡事都是先转到00相机坐标系下，再左乘R_rect_00，之后：（1）用P_rect_0*参数转到对应相机的图像【2D】 （2）用[R_0* | T_0* ]转到对应相机的坐标系【3D】
 
+### 3. 转TUM格式
+
+kitti_poses_and_timestamps_to_trajectory
+
 ## 02 tum
 
 TUM RGB-D数据集由在不同的室内场景使用Microsoft Kinect传感器记录的39 个序列组成，包含了
