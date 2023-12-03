@@ -1,0 +1,14 @@
+<launch>
+
+    <arg name="outputpath" default="/home/ubuntu/Dev/Dataset/Realsence/rgbd/d455/test" />
+
+    <param name="outputpath" type="string" value="$(arg outputpath)" />
+    <param name="bag_name" type="string" value="/home/ubuntu/Dev/Dataset/Realsence/rgbd/d455/1026d455.bag" />
+    <param name="topic_name_rgb" type="string" value="/camera/color/image_raw" />
+    <param name="topic_name_depth" type="string" value="/camera/aligned_depth_to_color/image_raw" />
+
+
+    <node pkg="dataset_converter" type="rosbagToTUM" name="rosbagToTUM" output="screen"/>
+    <node pkg="dataset_converter" type="associate.py" name="associate" output="screen"/>
+
+</launch>
