@@ -86,3 +86,6 @@ rosbag数据集转TUM格式: https://www.guyuehome.com/35920
 ROS下使用电脑相机运行ORB-SLAM2: https://blog.csdn.net/qinqinxiansheng/article/details/107079265
 opencv调用相机运行ORB-SLAM2: https://blog.csdn.net/zhangqian_shai/article/details/88406981
 https://blog.csdn.net/s534435877/article/details/107655020
+
+## bag2gnssandimudata
+![Alt text](images/image.png)
