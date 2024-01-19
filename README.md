@@ -2,7 +2,7 @@ hao_datasets
 
 自己用的SLAM数据集整理，KITTI TUM EUROC ROSBAG 数据集格式
 
-![1699512189724](image/README/1699512189724.png)
+![1699512189724](images/README/1699512189724.png)
 
 ## 01 KITTI
 
@@ -12,23 +12,23 @@ KITTI数据集的数据采集平台装配有2个灰度摄像机，2个彩色摄�
 
 地址:  http://www.cvlibs.net/datasets/kitti
 
-<img src="image/README/image-20221129150136624.png" alt="image-20221129150136624" style="zoom:50%;" />
+<img src="images/README/image-20221129150136624.png" alt="image-20221129150136624" style="zoom:50%;" />
 
 ### 1. odometry和raw的对应关系
 
 Odometry页面的数据集目的是测试包括LiDAR和相机的纯SLAM（指无GPS）的结果，和raw数据集的对应关系如下。最后两列是指raw和odometry对应的起止序号，因为有几张是多余的。2011_09_26_drive_0067数据集不存在，应该是后期官方删除的。另外，odometry的00-10是有真值的，剩下的11-21是测试集。
 
-> 00: 2011_10_03_drive_0027 000000 004540
-> 01: 2011_10_03_drive_0042 000000 001100
-> 02: 2011_10_03_drive_0034 000000 004660
-> 03: 2011_09_26_drive_0067 000000 000800
-> 04: 2011_09_30_drive_0016 000000 000270
-> 05: 2011_09_30_drive_0018 000000 002760
-> 06: 2011_09_30_drive_0020 000000 001100
-> 07: 2011_09_30_drive_0027 000000 001100
-> 08: 2011_09_30_drive_0028 001100 005170
-> 09: 2011_09_30_drive_0033 000000 001590
-> 10: 2011_09_30_drive_0034 000000 001200
+- 00: 2011_10_03_drive_0027 000000 004540
+- 01: 2011_10_03_drive_0042 000000 001100
+- 02: 2011_10_03_drive_0034 000000 004660
+- 03: 2011_09_26_drive_0067 000000 000800
+- 04: 2011_09_30_drive_0016 000000 000270
+- 05: 2011_09_30_drive_0018 000000 002760
+- 06: 2011_09_30_drive_0020 000000 001100
+- 07: 2011_09_30_drive_0027 000000 001100
+- 08: 2011_09_30_drive_0028 001100 005170
+- 09: 2011_09_30_drive_0033 000000 001590
+- 10: 2011_09_30_drive_0034 000000 001200
 
 前面说了，odometry是纯SLAM但是如果你想验证GPS融合效果怎么办，这时候就不能只用odometry页面的数据了，根据上面的对应关系去把raw数据下载下来。这里有两个选择unsynced+unrectified、synced+rectified，前者指图像、LiDAR、GPS/IMU等数据没有对齐，图像也没有矫正，真正的原始数据，这块IMU的频率是100HZ；后者各源数据都是一一对齐的，图像也矫正了，但是GPS/IMU的频率只有10HZ，基本够用。
 
@@ -36,7 +36,7 @@ Odometry页面的数据集目的是测试包括LiDAR和相机的纯SLAM（指无
 
 ### 2. 标定文件
 
-<img src="image/README/biaoding.png" alt="image-20221129150136624" style="zoom:80%;" />
+<img src="images/README/biaoding.png" alt="image-20221129150136624" style="zoom:80%;" />
 
 这里只记录raw数据的标定文件。不同日期采集的数据标定略有不同，包括三个文件：calib_cam_to_cam.txt，calib_imu_to_velo.txt，calib_velo_to_cam.txt，这个很简单，看上面图的坐标示意以及标定文件名字就懂了。其中，calib_cam_to_cam.txt需要好好说一说，另外两个有手就会。
 
@@ -78,9 +78,9 @@ https://vision.in.tum.de/data/datasets/rgbd-dataset/tools#evaluation
 
 https://vision.in.tum.de/data/datasets/rgbd-dataset/download
 
-![1699510107915](image/README/1699510107915.png)
+![1699510107915](images/README/1699510107915.png)
 
-![1699510318081](image/README/1699510318081.png)
+![1699510318081](images/README/1699510318081.png)
 
 ### 2.1 TUM RGBD数据集工具及使用
 
@@ -218,19 +218,70 @@ file_handle3.close()
 
    这儿的 `--t_max_diff=0.05 --t_offset=0.05`和 `-a`分别表示允许的最大时间误差、时间偏移和对齐坐标系。
 
+### 2.3 ROS 轨迹保存TUM格式
+
+```cpp
+#include<iostream>
+#include<fstream>
+#include<eigen3/Eigen/Eigen>
+#include<ros/ros.h>
+#include<tf/transform_listener.h>
+ 
+using namespace std;
+ 
+ofstream foutC;
+ 
+ 
+int main(int argc, char **argv){
+    //string file_name;
+    //ros::param::get("file_name",file_name);
+    ros::init(argc, argv, "save_traj_as_tum");
+    ros::NodeHandle nh;
+  
+    foutC.open("./test.txt");
+    tf::TransformListener listener;
+    ros::Rate rate(20);
+    while(ros::ok()){
+        tf::StampedTransform transform;
+        try
+        {
+            listener.waitForTransform("/odom", "/base_link", ros::Time(0), ros::Duration(1));
+            listener.lookupTransform("/odom", "/base_link", ros::Time(0), transform);
+            foutC << transform.stamp_ << " ";
+            float x = transform.getOrigin().getX();
+            float y = transform.getOrigin().getY();
+            float z = transform.getOrigin().getZ();
+            float qx = transform.getRotation().getX();
+            float qy = transform.getRotation().getY();
+            float qz = transform.getRotation().getZ();
+            float qw = transform.getRotation().getW();
+            ROS_INFO("%f %f %f %f %f %f %f",x,y,z,qx,qy,qz,qw);
+            foutC << x <<" " << y << " " << z << " " << qx << " " << qy << " " << qz << " " << qw << std::endl;
+        }
+        catch(const std::exception& e)
+        {
+            std::cerr << e.what() << '\n';
+        }
+        rate.sleep();
+    }
+    foutC.close();
+    return 0;
+}
+```
+
 ## 03 EuRoC
 
-<img src="image/README/image-20221129152408668.png" alt="image-20221129152408668" style="zoom: 50%;" />
+<img src="images/README/image-20221129152408668.png" alt="image-20221129152408668" style="zoom: 50%;" />
 
 Euroc提供ROS和zip两种数据格式
 
 下载地址：https://projects.asl.ethz.ch/datasets/doku.php?id=kmavvisualinertialdatasets#downloads
 
-<img src="image/README/image-20221129151045027.png" alt="image-20221129151045027" style="zoom:67%;" />
+<img src="images/README/image-20221129151045027.png" alt="image-20221129151045027" style="zoom:67%;" />
 
 ROSBAG格式：
 
-<img src="image/README/image-20221129151452891.png" alt="image-20221129151452891" style="zoom:50%;" />
+<img src="images/README/image-20221129151452891.png" alt="image-20221129151452891" style="zoom:50%;" />
 
 ZIP格式：
 
@@ -380,7 +431,7 @@ size_t load_imu_data(const string &imu_file_str,
 
 ## 04 lidar_SLAM
 
-![image-20221129150109843](image/README/image-20221129150109843.png)
+![image-20221129150109843](images/README/image-20221129150109843.png)
 
 ## 05 ROSBAG
 
@@ -513,3 +564,11 @@ rosrun ORB_SLAM2 RGBD Vocabulary/ORBvoc.txt Examples/ROS/ORB_SLAM2/Astra.yaml _r
 ```
 
 关于如何选择内参文件，需要根据你下载的**ROS****bag**数据集进行判断，如我下载的文件名为**rgbd_dataset_freiburg1_xyz.bag**，文件名字所含数字为 ***1*** ，故而使用的内参文件对应于**TUM1**。内参文件主要需要修改参数**DepthMapFactor**。
+
+# 06 r3live
+
+# 07 NTU VIRAL
+
+https://ntu-aris.github.io/ntu_viral_dataset/
+
+![1699510318081](images/README/1705639090478.png)
